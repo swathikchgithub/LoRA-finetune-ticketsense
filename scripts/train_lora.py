@@ -31,7 +31,8 @@ from transformers import (
     AutoTokenizer,
     TrainingArguments,
     Trainer,
-    DataCollatorForLanguageModeling,
+    # DataCollatorForLanguageModeling,
+    DataCollatorForSeq2Seq
 )
 from peft import LoraConfig, get_peft_model, TaskType
 
@@ -138,7 +139,14 @@ def main():
     # much higher, target_modules is too broad; much lower, LoRA may be
     # under-parameterized for the task.
 
-    collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+    #collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+
+    collator = DataCollatorForSeq2Seq(
+        tokenizer=tokenizer,
+        model=model,
+        label_pad_token_id=-100,
+        padding=True,
+    )
 
     training_args = TrainingArguments(
         output_dir=str(OUTPUT_DIR),
