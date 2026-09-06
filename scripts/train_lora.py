@@ -159,7 +159,7 @@ def main():
         # smaller set of low-rank parameters from a random init, not
         # nudging pretrained weights.
         lr_scheduler_type="cosine",
-        warmup_ratio=15,
+        warmup_steps=15,
         weight_decay=0.01,
         logging_steps=10,
         eval_strategy="epoch",
