@@ -66,10 +66,16 @@ def build_example(tokenizer, text, label, max_len=512):
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": text},
     ]
-    prompt_ids = tokenizer.apply_chat_template(
-        messages, tokenize=True, add_generation_prompt=True
+    prompt_text = tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True
     )
+    prompt_ids = tokenizer.encode(prompt_text, add_special_tokens=False)
+    
+    print(f"Prompt text: {prompt_text}")
+    print(f"Prompt IDs: {prompt_ids}")
+    
     label_ids = tokenizer.encode(label, add_special_tokens=False) + [tokenizer.eos_token_id]
+    print(f"Label IDs: {label_ids}")
 
     input_ids = prompt_ids + label_ids
     labels = [-100] * len(prompt_ids) + label_ids  # -100 = ignored in loss
