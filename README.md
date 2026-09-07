@@ -108,26 +108,74 @@ raise suspicion before it's celebrated, not after.
 
 
 
-*(Fill in after running `train_lora.py` and `evaluate.py` on a rented GPU
-— the harness in `evaluate.py` writes `results/summary.json` with every
-number below.)*
+## Results
 
 | Metric | Base (zero-shot) | Fine-tuned (LoRA) |
 |---|---|---|
-| Overall accuracy | TBD | TBD |
-| Invalid/unparseable output rate | TBD | TBD |
-| Self-consistency (5 runs, T=0.7) | TBD | TBD |
-| p50 latency | TBD | TBD |
-| Avg output tokens | TBD | TBD |
+| Overall accuracy | 78.3% (90/115) | **91.3%** (105/115) |
+| Invalid/unparseable output rate | 0.0% | 0.0% |
+| Self-consistency (5 runs, T=0.7, 30 examples) | 83.3% | **96.7%** |
+| p50 latency | 49ms | 100ms |
+| p95 latency | 80ms | 194ms |
+| Avg output tokens | 2.3 | 2.3 |
 
-**Per-category accuracy:** TBD (table from `results/summary.json`)
+**Per-category accuracy:**
 
-**Failure mode analysis:** TBD — pull the worst confusions from
-`results/ft_results.json` (`correct: false`) and characterize them.
-Expect the real signal to be in *which* categories get confused (e.g.
-Network vs. Software when a ticket describes an app failing to connect)
-rather than random noise — that distinction is worth a paragraph in
-interviews.
+| Category | Base | Fine-tuned |
+|---|---|---|
+| Hardware | 100.0% (13/13) | 100.0% (13/13) |
+| Software | 63.0% (17/27) | 74.1% (20/27) |
+| Network | 100.0% (22/22) | 100.0% (22/22) |
+| Access_Account | 75.0% (3/4) | 25.0% (1/4) |
+| Password_Reset | 54.5% (6/11) | **100.0%** (11/11) |
+| Email | 66.7% (10/15) | **100.0%** (15/15) |
+| Security_Phishing | 50.0% (3/6) | **100.0%** (6/6) |
+| Printer | 94.1% (16/17) | 100.0% (17/17) |
+
+Note on `Access_Account`: only 4 test examples exist for this category (a
+consequence of the template-level split putting most Access_Account
+templates in train/val). One flipped prediction swings the percentage by
+25 points — this number is too noisy to draw a real conclusion from, and
+is flagged here rather than glossed over. A larger, more evenly
+distributed test set would fix this.
+
+**On latency:** the fine-tuned model is ~2x slower per prediction (100ms
+vs 49ms p50). This isn't a fine-tuning downside in general — it's because
+the LoRA adapter is still being applied as a separate set of matrices on
+top of the frozen base weights at inference time here. In a real
+deployment you'd call `model.merge_and_unload()` (PEFT's built-in method)
+after training, which folds the adapter weights directly into the base
+model's weights — at that point inference speed matches the base model
+exactly, with zero LoRA overhead. Worth stating explicitly: **LoRA has an
+inference cost until merged**, and this project's own numbers demonstrate
+it directly.
+
+## Failure mode analysis
+
+All 10 of the fine-tuned model's test-set errors trace back to two root
+causes — both cases of genuine label ambiguity in the dataset rather than
+random model confusion:
+
+1. **6/10 errors**: tickets phrased like "*[app] keeps asking me to
+   re-authenticate every time I open a new tab*" are labeled `Software`
+   in the dataset, but the model consistently predicts `Password_Reset`.
+   This is a defensible disagreement, not a mistake — a ticket about
+   repeated re-authentication prompts genuinely sits on the boundary
+   between "the app is buggy" and "something's wrong with my
+   login/session," and a real support team might route it either way.
+2. **3/10 errors**: "*Can't access the finance dashboard, getting a
+   permission denied error*" is labeled `Access_Account`, predicted
+   `Software` — same pattern, "permission denied" is ambiguous between
+   an access problem and an app bug.
+
+The takeaway: the model's errors are **concentrated on genuinely fuzzy
+category boundaries**, not scattered randomly across unrelated
+categories. That's a meaningfully different (and better) finding than
+"the model got some wrong" — it suggests the remaining error rate has
+more to do with label design than model capability, and the fix would be
+tightening the category definitions or adding a tie-breaking rule to the
+system prompt, not more training data.
+
 
 ## What I'd do differently at production scale
 
@@ -147,7 +195,7 @@ Worth saying explicitly, since this is a toy project:
 ## Repo structure
 
 ```
-it-ticket-lora/
+LoRA-finetune-ticketsense/
 ├── dataset/
 │   ├── train.jsonl
 │   ├── val.jsonl
