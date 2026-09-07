@@ -31,8 +31,7 @@ from transformers import (
     AutoTokenizer,
     TrainingArguments,
     Trainer,
-    # DataCollatorForLanguageModeling,
-    DataCollatorForSeq2Seq
+    DataCollatorForSeq2Seq,
 )
 from peft import LoraConfig, get_peft_model, TaskType
 
@@ -71,12 +70,7 @@ def build_example(tokenizer, text, label, max_len=512):
         messages, tokenize=False, add_generation_prompt=True
     )
     prompt_ids = tokenizer.encode(prompt_text, add_special_tokens=False)
-    
-    print(f"Prompt text: {prompt_text}")
-    print(f"Prompt IDs: {prompt_ids}")
-    
     label_ids = tokenizer.encode(label, add_special_tokens=False) + [tokenizer.eos_token_id]
-    print(f"Label IDs: {label_ids}")
 
     input_ids = prompt_ids + label_ids
     labels = [-100] * len(prompt_ids) + label_ids  # -100 = ignored in loss
@@ -139,12 +133,16 @@ def main():
     # much higher, target_modules is too broad; much lower, LoRA may be
     # under-parameterized for the task.
 
-    #collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
-
     collator = DataCollatorForSeq2Seq(
         tokenizer=tokenizer,
         model=model,
         label_pad_token_id=-100,
+        # This is the fix for the earlier padding crash: unlike
+        # DataCollatorForLanguageModeling, this collator knows to pad the
+        # `labels` field (not just input_ids/attention_mask) up to the
+        # longest example in each batch -- and critically, pads labels
+        # with -100 specifically, so the padding itself never contributes
+        # to the loss either.
         padding=True,
     )
 
@@ -168,6 +166,10 @@ def main():
         # nudging pretrained weights.
         lr_scheduler_type="cosine",
         warmup_steps=15,
+        # ~3% of total steps (503 examples / effective batch 16 * 3 epochs ≈ 94
+        # steps total) -- same warmup fraction as warmup_ratio=0.03 would give,
+        # expressed as a fixed step count for compatibility across transformers
+        # versions that don't accept warmup_ratio directly.
         weight_decay=0.01,
         logging_steps=10,
         eval_strategy="epoch",

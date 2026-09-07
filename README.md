@@ -73,7 +73,40 @@ larger-model comparison point (see `scripts/train_lora.py`, just change
      emit a clean parseable category at all
    - Saved per-example results for manual failure mode analysis
 
-## Results
+## A real bug I found and fixed: template-level data leakage
+
+Worth documenting explicitly, because it's a more useful thing to be able
+to discuss in an interview than a clean result would have been.
+
+**What happened:** the first version of the dataset generator produced 90
+examples per category from a pool of only 8 hand-written sentence
+templates (filling in random numbers/app names and adding noise). The
+train/val/test split was done by shuffling and cutting the 720 *finished
+examples* — not by template. Since each template got reused ~11 times,
+near-identical siblings of the same template (e.g. "WiFi keeps
+disconnecting every 12 minutes" and "...every 31 minutes") ended up on
+both sides of the split.
+
+**The symptom:** after the first training run, `eval_loss` dropped to
+~0.0001 — essentially zero — after only 3 epochs on ~500 examples. That's
+a suspiciously strong result for so little training data, and it turned
+out to be exactly that: not genuine generalization, but the model
+recognizing test examples it had effectively already seen near-duplicates
+of during training.
+
+**The fix:** `generate_dataset.py` now tracks which template produced
+each example and splits by *template group*, not by individual example —
+every example from a given template lands entirely in train, val, or
+test, never split across them. Verified zero template overlap between
+train and test after the fix. Template variety per category was also
+roughly doubled (8 → 14) to make the split more meaningful.
+
+**Why this is worth including rather than hiding:** catching this kind of
+leakage before trusting a number is exactly the evaluation instinct that
+transfers from production ML systems work — a near-perfect metric should
+raise suspicion before it's celebrated, not after.
+
+
 
 *(Fill in after running `train_lora.py` and `evaluate.py` on a rented GPU
 — the harness in `evaluate.py` writes `results/summary.json` with every
