@@ -74,9 +74,13 @@ def generate(model, tokenizer, text, temperature=0.0, max_new_tokens=12):
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": text},
     ]
-    inputs = tokenizer.apply_chat_template(
-        messages, tokenize=True, add_generation_prompt=True, return_tensors="pt"
-    ).to(model.device)
+
+    prompt_text = tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True
+    )
+    inputs = tokenizer(prompt_text, return_tensors="pt").input_ids.to(model.device)
+
+  
 
     start = time.perf_counter()
     with torch.no_grad():
