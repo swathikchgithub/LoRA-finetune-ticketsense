@@ -1,108 +1,99 @@
-{"text": "Requesting a new laptop, mine has a cracked screen from a drop. Thanks in advance.", "label": "Hardware"}
-{"text": "Wireless printing stopped working after the network change last week. Thanks in advance.", "label": "Printer"}
-{"text": "Hey, The internal dashboard app throws a 500 error on the analytics page. Please advise.", "label": "Software"}
-{"text": "Hey, Downloaded an attachment before realizing the sender domain looked fake.", "label": "Security_Phishing"}
-{"text": "Quick question, My shared mailbox for the support team isn't showing new tickets. Please advise.", "label": "Email"}
-{"text": "Urgent - Flagging an email that impersonates our CEO asking for an urgent wire transfer. This has been going on for a couple days now.", "label": "Security_Phishing"}
-{"text": "Not sure who to ask, but Toner light is blinking red but we just replaced the cartridge.", "label": "Printer"}
-{"text": "Quick question, The printer shows offline even though it's turned on and connected. This has been going on for a couple days now.", "label": "Printer"}
-{"text": "Getting a mailbox full error but I'm nowhere near the storage limit. Thanks in advance.", "label": "Email"}
-{"text": "Hey, My badge access to the 19th floor server room was revoked incorrectly.", "label": "Access_Account"}
-{"text": "Hey, WiFi keeps disconnecting every 2 minutes on the 3rd floor. Please advise.", "label": "Network"}
-{"text": "My keyboard is missing several keys and I need a replacement ASAP. This is blocking my work.", "label": "Hardware"}
-{"text": "Hi team, Flagging an email that impersonates our CEO asking for an urgent wire transfer. Let me know what you need from me.", "label": "Security_Phishing"}
-{"text": "Print job has been stuck in teh queue for 41 minutes.", "label": "Printer"}
-{"text": "Urgent - My temporary password isn't working, requesting a new one be issued.", "label": "Password_Reset"}
-{"text": "Not sure who to ask, but Guest wifi network isn't showing up in the list of available networks. This has been going on for a couple days now.", "label": "Network"}
-{"text": "Not sure who to ask, but My keyboard is missing several keys and I need a replacement ASAP. Thanks in advance.", "label": "Hardware"}
-{"text": "Urgent - Emails from SAP are going straight to spam, need that whitelisted.", "label": "Email"}
-{"text": "Distribution list Jira-team isn't delivering to all members. This has been going on for a couple days now.", "label": "Email"}
-{"text": "Hi team, Slack is showing a blank white screen instead of loading. This is blocking my work.", "label": "Software"}
-{"text": "Hey, The webcam on my work laptop stopped working after the last update, might be hardware. Please advise.", "label": "Hardware"}
-{"text": "Hey, Can't reset password, security questions aren't matching what I remember setting. Let me know what you need from me.", "label": "Password_Reset"}
-{"text": "Hi team, Requesting admin rights on my laptop to install dev tools. Let me know what you need from me.", "label": "Access_Account"}
-{"text": "Hey, The printer shows offline even though it's turned on and connected. This has been going on for a couple days now.", "label": "Printer"}
-{"text": "Urgent - My mouse cursor jumps around randomly, might be a hardware issue with the trackpad. Please advise.", "label": "Hardware"}
-{"text": "Password reset email never arrived, checked spam folder too.", "label": "Password_Reset"}
-{"text": "Urgent - Need to reset my password, it expired and the portal won't let me set a new one. This has been going on for a couple days now.", "label": "Password_Reset"}
-{"text": "WiFi keeps disconnecting every 9 minutes on the 3rd floor. This is blocking my work.", "label": "Network"}
-{"text": "Scanner attached to the printer isn't sending scans to my email.", "label": "Printer"}
-{"text": "Not sure who to ask, but I was removed from the SAP workspace by mistake, please re-add me.", "label": "Access_Account"}
-{"text": "Urgent - Print job has been stuck in the queue for 45 minutes. Let me know what you need from me.", "label": "Printer"}
-{"text": "Following up again - Password expired while I was on leave, portal locked me out entirely. Let me know what you need from me.", "label": "Password_Reset"}
-{"text": "Urgent - I can't connect to the VPN, it just times out after trying for a while.", "label": "Network"}
-{"text": "My laptop won't turn on, I've tried holding the power button for 17 seconds and nothing happens. This has been going on for a couple days now.", "label": "Hardware"}
-{"text": "I can't connect to the VPN, it just times out after trying for a while. Please advise.", "label": "Network"}
-{"text": "Hey, Scanner attached to the printer isn't sending scans to my email. Let me know what you need from me.", "label": "Printer"}
-{"text": "WiFi keeps disconnecting every 18 minutes on teh 3rd floor. Let me know what you need from me.", "label": "Network"}
-{"text": "Following up again - Need to reset my password, it expired and the portal won't let me set a new one. This is blocking my work.", "label": "Password_Reset"}
-{"text": "Not sure who to ask, but Need read access to the shared repository for the GitHub project.", "label": "Access_Account"}
-{"text": "Quick question, My keyboard is missing several keys and I need a replacement ASAP. This is blocking my work.", "label": "Hardware"}
-{"text": "Hey, Locked out of my account after too many failed login attempts, need a reset.", "label": "Password_Reset"}
-{"text": "Not sure who to ask, but My mouse cursor jumps around randomly, might be a hardware issue with the trackpad.", "label": "Hardware"}
-{"text": "Hi team, Guest wifi network isn't showing up in the list of available networks.", "label": "Network"}
-{"text": "Following up again - Guest wifi network isn't showing up in the list of available networks. Let me know what you need from me.", "label": "Network"}
-{"text": "The CRM application freezes when I click on the reports tab. Please advise.", "label": "Software"}
-{"text": "Hey, Someone is asking for my login over a call claiming to be IT support, is this legit? Please advise.", "label": "Security_Phishing"}
-{"text": "Distribution list Jira-team isn't delivering to all members. Let me know what you need from me.", "label": "Email"}
-{"text": "Quick question, Can't send attachments over 28MB, keeps bouncing back. Thanks in advance.", "label": "Email"}
-{"text": "Urgent - Downloaded an attachment before realizing the sender domain looked fake. Let me know what you need from me.", "label": "Security_Phishing"}
-{"text": "Quick question, Flagging an email that impersonates our CEO asking for an urgent wire transfer. Thanks in advance.", "label": "Security_Phishing"}
-{"text": "Following up again - Toner light is blinking red but we just replaced the cartridge.", "label": "Printer"}
-{"text": "Hi team, My calendar invites aren't syncing with Tableau, meetings are missing. Let me know what you need from me.", "label": "Email"}
-{"text": "Hey, My shared mailbox for the support team isn't showing new tickets. This is blocking my work.", "label": "Email"}
-{"text": "Quick question, The internal dashboard app throws a 500 error on the analytics page.", "label": "Software"}
-{"text": "Quick question, My calendar invites aren't syncing with Okta, meetings are missing. Let me know what you need from me.", "label": "Email"}
-{"text": "Hi team, The docking station in conference room 26 isn't charging any laptops. This has been going on for a couple days now.", "label": "Hardware"}
-{"text": "Hi team, Password reset email never arrived, checked spam folder too. This has been going on for a couple days now.", "label": "Password_Reset"}
-{"text": "Following up again - My account showed a login from a location I've never been to, might be compromised. Please advise.", "label": "Security_Phishing"}
-{"text": "Quick question, Got a suspicious email asking me to verify my password, might be phishing. Let me know what you need from me.", "label": "Security_Phishing"}
-{"text": "Following up again - Getting intermittent packet loss on calls, video keeps freezing. Thanks in advance.", "label": "Network"}
-{"text": "Hey, Can't print in color anymore, only black and white comes out. Thanks in advance.", "label": "Printer"}
-{"text": "Not sure who to ask, but My account got locked out after I changed teams, need access restored.", "label": "Access_Account"}
-{"text": "Hey, The webcam on my work laptop stopped working after the last update, might be hardware. Let me know what you need from me.", "label": "Hardware"}
-{"text": "Not sure who to ask, but Ethernet port in my office doesn't seem to be getting any signal. Thanks in advance.", "label": "Network"}
-{"text": "Hey, Getting repeated phishing attempts on my work email this week, need it reported. This has been going on for a couple days now.", "label": "Security_Phishing"}
-{"text": "I can't install the new version of Tableau, it fails at 12% every time.", "label": "Software"}
-{"text": "I can't connect to the VPN, it just times out after trying for a while. This is blocking my work.", "label": "Network"}
-{"text": "Not sure who to ask, but Flagging an email that impersonates our CEO asking for an urgent wire transfer. This has been going on for a couple days now.", "label": "Security_Phishing"}
-{"text": "Hey, New hire starting 16 days from now needs standard access provisioned. Please advise.", "label": "Access_Account"}
-{"text": "Hey, Distribution list Slack-team isn't delivering to all members. Let me know what you need from me.", "label": "Email"}
-{"text": "Can't access teh finance dashboard, getting a permission denied error. This has been going on for a couple days now.", "label": "Access_Account"}
-{"text": "Following up again - My temporary password isn't working, requesting a new one be issued. Thanks in advance.", "label": "Password_Reset"}
-{"text": "Hi team, MFA app got reinstalled on a new phone, can't log in anymore, need reset.", "label": "Password_Reset"}
-{"text": "New hire starting 15 days from now needs standard access provisioned. This has been going on for a couple days now.", "label": "Access_Account"}
-{"text": "Hey, Getting repeated phishing attempts on my work email this week, need it reported. Let me know what you need from me.", "label": "Security_Phishing"}
-{"text": "Urgent - The printer shows offline even though it's turned on and connected. Please advise.", "label": "Printer"}
-{"text": "Someone is asking for my login over a call claiming to be IT support, is this legit? Please advise.", "label": "Security_Phishing"}
-{"text": "Getting intermittent packet loss on calls, video keeps freezing.", "label": "Network"}
-{"text": "Not sure who to ask, but The internal dashboard app throws a 500 error on the analytics page.", "label": "Software"}
+{"text": "Guest wifi network isn't showing up in the list of available networks. Please advise.", "label": "Network"}
+{"text": "Hey, Getting fake invoice emails from a domain that mimics our vendor's name. This is blocking my work.", "label": "Security_Phishing"}
 {"text": "Received a text claiming to be from IT asking for my MFA code, seems like smishing. Let me know what you need from me.", "label": "Security_Phishing"}
-{"text": "Hey, Downloaded an attachment before realizing the sender domain looked fake. Let me know what you need from me.", "label": "Security_Phishing"}
-{"text": "Hi team, My laptop won't turn on, I've tried holding the power button for 8 seconds and nothing happens.", "label": "Hardware"}
-{"text": "Following up again - I need access to the Workday project folder, my manager approved it 37 days ago.", "label": "Access_Account"}
-{"text": "Quick question, I can't install the new version of Tableau, it fails at 8% every time.", "label": "Software"}
-{"text": "Hey, Flagging an email that impersonates our CEO asking for an urgent wire transfer.", "label": "Security_Phishing"}
-{"text": "Hey, Workday is showing a blank white screen instead of loading.", "label": "Software"}
-{"text": "Hey, Password reset email never arrived, checked spam folder too. Thanks in advance.", "label": "Password_Reset"}
-{"text": "Hi team, My IDE won't launch, throws an error about a missing dependency.", "label": "Software"}
-{"text": "Hi team, My calendar invites aren't syncing with Jira, meetings are missing. This has been going on for a couple days now.", "label": "Email"}
-{"text": "Requesting admin rights on my laptop to install dev tools.", "label": "Access_Account"}
+{"text": "Urgent - My IDE won't launch, throws an error about a missing dependency. Let me know what you need from me.", "label": "Software"}
+{"text": "Following up again - Getting duplicate copies of every email that comes in. This is blocking my work.", "label": "Email"}
+{"text": "Following up again - Getting fake invoice emails from a domain that mimics our vendor's name.", "label": "Security_Phishing"}
 {"text": "Hi team, Received a text claiming to be from IT asking for my MFA code, seems like smishing. Please advise.", "label": "Security_Phishing"}
-{"text": "Hi team, WiFi keeps disconnecting every 30 minutes on the 3rd floor. Thanks in advance.", "label": "Network"}
-{"text": "Following up again - Got a suspicious email asking me to verify my password, might be phishing.", "label": "Security_Phishing"}
-{"text": "My account showed a login from a location I've never been to, might be compromised. This is blocking my work.", "label": "Security_Phishing"}
-{"text": "Quick question, The internal dashboard app throws a 500 error on the analytics page. Let me know what you need from me.", "label": "Software"}
-{"text": "Urgent - The VPN connects but I can't reach any internal tools once connected.", "label": "Network"}
-{"text": "Getting a licensing error when I try to open SAP, says my seat expired. This has been going on for a couple days now.", "label": "Software"}
-{"text": "Hey, Got a suspicious email asking me to verify my password, might be phishing. Please advise.", "label": "Security_Phishing"}
-{"text": "Following up again - Not receiving any emails since this morning, outbox is also stuck. Thanks in advance.", "label": "Email"}
-{"text": "Quick question, I was removed from the Zoom workspace by mistake, please re-add me. This has been going on for a couple days now.", "label": "Access_Account"}
-{"text": "Urgent - New hire starting 16 days from now needs standard access provisioned. Thanks in advance.", "label": "Access_Account"}
-{"text": "Following up again - I forgot my passowrd and the self-service reset link isn't working. This is blocking my work.", "label": "Password_Reset"}
-{"text": "Not sure who to ask, but Slack is showing a blank white screen instead of loading. Thanks in advance.", "label": "Software"}
-{"text": "Hi team, Flagging an email that impersonates our CEO asking for an urgent wire transfer. This is blocking my work.", "label": "Security_Phishing"}
-{"text": "Internet is extremely slow in the building today, pages take forever to load. This has been going on for a couple days now.", "label": "Network"}
-{"text": "My temporary password isn't working, requesting a new one be issued. Thanks in advance.", "label": "Password_Reset"}
-{"text": "Urgent - Guest wifi network isn't showing up in the list of available networks. Thanks in advance.", "label": "Network"}
-{"text": "Hey, Can't send attachments over 24MB, keeps bouncing back.", "label": "Email"}
+{"text": "My browser extension for GitHub stopped syncing since the last update. This is blocking my work.", "label": "Software"}
+{"text": "Locked out of Workday specifically, other accounts still work fine. This is blocking my work.", "label": "Password_Reset"}
+{"text": "Hey, Autoreply won't turn off even though I disabled it in settings.", "label": "Email"}
+{"text": "Quick question, USB ports on my desktop stopped working after a power outage. This is blocking my work.", "label": "Hardware"}
+{"text": "Following up again - I need access to the SAP project folder, my manager approved it 12 days ago. This has been going on for a couple days now.", "label": "Access_Account"}
+{"text": "Hi team, VPN client crashes immediately on launch after the latest update.", "label": "Network"}
+{"text": "Following up again - Can't send attachments over 4MB, keeps bouncing back. This is blocking my work.", "label": "Email"}
+{"text": "My laptop fan is making a loud grinding noise and the machine feels very hot.", "label": "Hardware"}
+{"text": "Not sure who to ask, but My laptop fan is making a loud grinding noise and the machine feels very hot.", "label": "Hardware"}
+{"text": "My browser extension for Okta stopped syncing since the last update. This has been going on for a couple days now.", "label": "Software"}
+{"text": "Can't print from my laptop anymore, printer isn't showing in the list. This has been going on for a couple days now.", "label": "Printer"}
+{"text": "Hi team, Guest wifi network isn't showing up in the list of available networks.", "label": "Network"}
+{"text": "My IDE won't launch, throws an error about a missing dependency. Please advise.", "label": "Software"}
+{"text": "Following up again - I was removed from the Zoom workspace by mistake, please re-add me. Please advise.", "label": "Access_Account"}
+{"text": "Locked out of Okta specifically, other accounts still work fine.", "label": "Password_Reset"}
+{"text": "Hey, Can't send attachments over 28MB, keeps bouncing back.", "label": "Email"}
+{"text": "My laptop fan is making a loud grinding noise and the machine feels very hot. Please advise.", "label": "Hardware"}
+{"text": "Quick question, Can't print in color anymore, only black and white comes out. Please advise.", "label": "Printer"}
+{"text": "Following up again - VPN client crashes immediately on launch after the latest update.", "label": "Network"}
+{"text": "Hi team, Getting fake invoice emails from a domain that mimics our vendor's name. Thanks in advance.", "label": "Security_Phishing"}
+{"text": "Getting duplicate copies of every email that comes in.", "label": "Email"}
+{"text": "Getting fake invoice emails from a domain that mimics our vendor's name. Thanks in advance.", "label": "Security_Phishing"}
+{"text": "Not sure who to ask, but Can't print from my laptop anymore, printer isn't showing in teh list. This has been going on for a couple days now.", "label": "Printer"}
+{"text": "Urgent - Getting fake invoice emails from a domain that mimics our vendor's name. Let me know what you need from me.", "label": "Security_Phishing"}
+{"text": "Quick question, Can't print in color anymore, only black and white comes out.", "label": "Printer"}
+{"text": "Following up again - VPN client crashes immediately on launch after the latest update. This has been going on for a couple days now.", "label": "Network"}
+{"text": "Hey, Getting duplicate copies of every email that comes in.", "label": "Email"}
+{"text": "Not sure who to ask, but Can't print from my laptop anymore, printer isn't showing in the list.", "label": "Printer"}
+{"text": "Hi team, My browser extension for GitHub stopped syncing since the last update. This has been going on for a couple days now.", "label": "Software"}
+{"text": "Getting duplicate copies of every email that comes in. This has been going on for a couple days now.", "label": "Email"}
+{"text": "Urgent - Can't send attachments over 38MB, keeps bouncing back.", "label": "Email"}
+{"text": "Hey, Getting duplicate copies of every email that comes in. Let me know what you need from me.", "label": "Email"}
+{"text": "Hey, USB ports on my desktop stopped working after a power outage. Please advise.", "label": "Hardware"}
+{"text": "Quick question, USB ports on my desktop stopped working after a power outage. Please advise.", "label": "Hardware"}
+{"text": "Can't print in color anymore, only black and white comes out. This is blocking my work.", "label": "Printer"}
+{"text": "Following up again - Locked out of GitHub specifically, other accounts still work fine. Let me know what you need from me.", "label": "Password_Reset"}
+{"text": "Not sure who to ask, but My browser extension for Zoom stopped syncing since the last update.", "label": "Software"}
+{"text": "Urgent - Received a text claiming to be from IT asking for my MFA code, seems like smishing.", "label": "Security_Phishing"}
+{"text": "Not sure who to ask, but VPN client crashes immediately on launch after the latest update.", "label": "Network"}
+{"text": "Following up again - My browser extension for Tableau stopped syncing since the last update.", "label": "Software"}
+{"text": "Urgent - I was removed from the Salesforce workspace by mistake, please re-add me. Let me know what you need from me.", "label": "Access_Account"}
+{"text": "Can't send attachments over 26MB, keeps bouncing back.", "label": "Email"}
+{"text": "Urgent - Locked out of Workday specifically, otehr accounts still work fine. Let me know what you need from me.", "label": "Password_Reset"}
+{"text": "My browser extension for Jira stopped syncing since the last update.", "label": "Software"}
+{"text": "Guest wifi network isn't showing up in the list of available networks. Let me know what you need from me.", "label": "Network"}
+{"text": "Hey, Guest wifi network isn't showing up in the list of available networks. Thanks in advance.", "label": "Network"}
+{"text": "Autoreply won't turn off even though I disabled it in settings. This is blocking my work.", "label": "Email"}
+{"text": "Hey, USB ports on my desktop stopped working after a power outage.", "label": "Hardware"}
+{"text": "Urgent - I was removed from the Zoom workspace by mistake, please re-add me. Thanks in advance.", "label": "Access_Account"}
+{"text": "Following up again - My browser extension for GitHub stopped syncing since teh last update. Thanks in advance.", "label": "Software"}
+{"text": "Following up again - Autoreply won't turn off even though I disabled it in settings. Thanks in advance.", "label": "Email"}
+{"text": "Not sure who to ask, but Getting fake invoice emails from a domain that mimics our vendor's name.", "label": "Security_Phishing"}
+{"text": "Not sure who to ask, but Getting duplicate copies of every email that comes in. Please advise.", "label": "Email"}
+{"text": "USB ports on my desktop stopped working after a power outage.", "label": "Hardware"}
+{"text": "Hey, I need access to the ServiceNow project folder, my manager approved it 33 days ago. This is blocking my work.", "label": "Access_Account"}
+{"text": "Quick question, Getting duplicate copies of every email that comes in. Please advise.", "label": "Email"}
+{"text": "My browser extension for Tableau stopped syncing since the last update. Let me know what you need from me.", "label": "Software"}
+{"text": "Not sure who to ask, but Received a text claiming to be from IT asking for my MFA code, seems like smishing. Thanks in advance.", "label": "Security_Phishing"}
+{"text": "Following up again - Can't send attachments over 10MB, keeps bouncing back. Thanks in advance.", "label": "Email"}
+{"text": "Quick question, Guest wifi network isn't showing up in the list of available networks. Please advise.", "label": "Network"}
+{"text": "Hey, My laptop fan is making a loud grinding noise and the machine feels very hot. Please advise.", "label": "Hardware"}
+{"text": "I was removed from teh ServiceNow workspace by mistake, please re-add me.", "label": "Access_Account"}
+{"text": "Locked out of Workday specifically, other accounts still work fine. Please advise.", "label": "Password_Reset"}
+{"text": "Hey, I was removed from teh SAP workspace by mistake, please re-add me.", "label": "Access_Account"}
+{"text": "Quick question, Can't print from my laptop anymore, printer isn't showing in the list.", "label": "Printer"}
+{"text": "Urgent - Getting fake invoice emails from a domain that mimics our vendor's name. This is blocking my work.", "label": "Security_Phishing"}
+{"text": "Urgent - Guest wifi network isn't showing up in the list of available networks.", "label": "Network"}
+{"text": "Urgent - Autoreply won't turn off even though I disabled it in settings.", "label": "Email"}
+{"text": "Can't send attachments over 33MB, keeps bouncing back.", "label": "Email"}
+{"text": "Can't send attachments over 10MB, keeps bouncing back.", "label": "Email"}
+{"text": "Urgent - Received a text claiming to be from IT asking for my MFA code, seems like smishing. Thanks in advance.", "label": "Security_Phishing"}
+{"text": "My laptop fan is making a loud grinding noise and teh machine feels very hot. This is blocking my work.", "label": "Hardware"}
+{"text": "Locked out of Slack specifically, other accounts still work fine.", "label": "Password_Reset"}
+{"text": "Hi team, Can't print in color anymore, only black and white comes out. Let me know what you need from me.", "label": "Printer"}
+{"text": "Hey, Can't print in color anymore, only black and white comes out.", "label": "Printer"}
+{"text": "Not sure who to ask, but Autoreply won't turn off even though I disabled it in settings.", "label": "Email"}
+{"text": "Quick question, Received a text claiming to be from IT asking for my MFA code, seems like smishing.", "label": "Security_Phishing"}
+{"text": "Can't print in color anymore, only black and white comes out.", "label": "Printer"}
+{"text": "My laptop fan is making a loud grinding noise and the machine feels very hot. This is blocking my work.", "label": "Hardware"}
+{"text": "VPN client crashes immediately on launch after the latest update. This has been going on for a couple days now.", "label": "Network"}
+{"text": "Not sure who to ask, but Getting fake invoice emails from a domain that mimics our vendor's name. Thanks in advance.", "label": "Security_Phishing"}
+{"text": "Urgent - Can't print from my laptop anymore, printer isn't showing in the list. This has been going on for a couple days now.", "label": "Printer"}
+{"text": "Hey, My browser extension for SAP stopped syncing since the last update.", "label": "Software"}
+{"text": "USB ports on my desktop stopped working after a power outage. Let me know what you need from me.", "label": "Hardware"}
+{"text": "Following up again - Can't print from my laptop anymore, printer isn't showing in the list. This has been going on for a couple days now.", "label": "Printer"}
+{"text": "Received a text claiming to be from IT asking for my MFA code, seems like smishing.", "label": "Security_Phishing"}
+{"text": "Following up again - USB ports on my desktop stopped working after a power outage. This is blocking my work.", "label": "Hardware"}
+{"text": "Hi team, USB ports on my desktop stopped working after a power outage. Please advise.", "label": "Hardware"}
+{"text": "Quick question, Getting duplicate copies of every email that comes in.", "label": "Email"}
+{"text": "VPN client crashes immediately on launch after the latest update.", "label": "Network"}
+{"text": "Not sure who to ask, but Locked out of Jira specifically, other accounts still work fine. This has been going on for a couple days now.", "label": "Password_Reset"}
+{"text": "Received a text claiming to be from IT asking for my MFA code, seems like smishing. Thanks in advance.", "label": "Security_Phishing"}
