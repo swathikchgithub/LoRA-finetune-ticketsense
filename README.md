@@ -156,28 +156,42 @@ Ran the identical pipeline at three ranks to test whether more adapter
 capacity actually helps on this task/dataset size, rather than picking
 rank 16 by rule of thumb alone.
 
-| Rank | Trainable % | Best eval_loss |
-|---|---|---|
-| 8 | 0.59% | 0.096 |
-| 16 | 1.18% | **0.067** (best) |
-| 32 | 2.34% | 0.204 (worst — nearly 2-3x higher loss than rank 8 or 16) |
+| Rank | Trainable % | Best eval_loss | Test accuracy | Fine-tuned consistency |
+|---|---|---|---|---|
+| 8 | 0.59% | 0.096 | 92.2% (106/115) | **100%** |
+| 16 | 1.18% | **0.067** (best loss) | 91.3% (105/115) | 93.3% |
+| 32 | 2.34% | 0.204 (worst loss) | **93.0%** (best accuracy, 107/115) | 93.3% |
 
-**Finding:** doubling capacity from 16 to 32 made results *worse*, not
-better — a clean demonstration that with only 506 training examples,
-rank 32 has more capacity than the task needs, and that extra capacity
-goes toward overfitting rather than useful signal. This is a
-data-backed answer to "why rank 16," not a rule-of-thumb justification.
+**Finding — loss and accuracy don't agree on which rank is "best," and
+that's a real, worth-understanding fact rather than a bug:** rank 16 had
+the lowest loss but not the highest accuracy; rank 32 had the worst loss
+but the highest accuracy. Loss measures how confident the model's full
+probability distribution was at every position; accuracy only checks
+whether the single most-likely token happened to be correct. A less
+confident model can still pick the right answer slightly more often,
+especially on a test set this small (115 examples), where a couple of
+flipped predictions swing the percentage by 1-2 points either way.
 
-**A limitation worth being upfront about:** re-running rank 16 with
-identical hyperparameters on a separate occasion produced a different
-best eval_loss (0.036 in the original run vs. 0.067 here), because the
-LoRA adapter's initial weights are randomly initialized and the training
-script did not originally fix PyTorch's random seed (only dataset
-generation was seeded). `torch.manual_seed()` has since been added to
-`train_lora.py` to make future runs reproducible — but it's worth noting
-that with a dataset this small, some run-to-run variance from adapter
-initialization should be expected regardless, and a single run's number
-shouldn't be over-trusted without a repeat.
+**Two honest caveats, not glossed over:**
+- These three runs were **not seeded** (`torch.manual_seed()` was added
+  to `train_lora.py` after these ran), so part of the rank-to-rank
+  difference is plausibly random-initialization noise rather than a pure
+  rank effect. Rank 32's odd Network-category regression (72.7%, vs.
+  100% at rank 8 and 16, confused with Hardware) is a plausible symptom
+  of this rather than a real "rank 32 hurts Network specifically" effect.
+- A 2-point accuracy spread (91.3% to 93.0%) on 115 test examples is
+  within noise, not a strong signal — a rigorous read of this ablation
+  is "these three ranks perform roughly equivalently," not "rank 32 won."
+
+**Practical conclusion:** given accuracy is statistically indistinguishable
+across all three ranks here, **rank 8 is the better real-world choice** —
+it uses roughly a quarter of rank 32's trainable parameters and about half
+of rank 16's, for accuracy that's no worse (and, on this run, its
+fine-tuned model was also the most self-consistent, at 100%). The
+takeaway for future work: pick the smallest LoRA rank that gets the job
+done, not the largest one that's affordable — bigger isn't free, and on
+a small dataset it actively risks overfitting without a compensating
+accuracy gain.
 
 ## Failure mode analysis
 
