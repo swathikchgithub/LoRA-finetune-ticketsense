@@ -21,6 +21,7 @@ structured-output variants later (e.g. category + priority) without
 re-architecting.
 """
 
+import argparse
 import json
 from pathlib import Path
 
@@ -37,7 +38,7 @@ from peft import LoraConfig, get_peft_model, TaskType
 
 MODEL_NAME = "Qwen/Qwen2.5-1.5B-Instruct"
 DATA_DIR = Path(__file__).resolve().parent.parent / "dataset"
-OUTPUT_DIR = Path(__file__).resolve().parent.parent / "checkpoints" / "lora-it-ticket-classifier"
+CHECKPOINTS_ROOT = Path(__file__).resolve().parent.parent / "checkpoints"
 
 CATEGORIES = [
     "Hardware", "Software", "Network", "Access_Account",
@@ -81,6 +82,15 @@ def build_example(tokenizer, text, label, max_len=512):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--rank", type=int, default=16,
+        help="LoRA rank (r). Try 8, 16, 32 to compare capacity vs. overfitting.",
+    )
+    args = parser.parse_args()
+    output_dir = CHECKPOINTS_ROOT / f"lora-rank{args.rank}"
+    print(f"\n=== Training with LoRA rank={args.rank}, saving to {output_dir} ===\n")
+
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
@@ -104,18 +114,20 @@ def main():
     # ---- LoRA config: every choice explained ----
     lora_config = LoraConfig(
         task_type=TaskType.CAUSAL_LM,
-        r=16,
-        # Rank 16: for a well-defined, low-diversity task like 8-way
-        # classification, the "delta" the model needs to learn is small —
-        # mostly re-weighting which tokens to attend to for category
-        # signal. Rank 8-16 is typically enough; going to 64+ risks
-        # overfitting on ~500 training examples and slows training for
-        # no accuracy gain. If eval shows underfitting (loss plateaus
-        # high), raise to 32 before doing anything else.
-        lora_alpha=32,
+        r=args.rank,
+        # Rank is now a CLI argument so we can compare 8 vs 16 vs 32 on the
+        # exact same data/pipeline. For a well-defined, low-diversity task
+        # like 8-way classification, the "delta" the model needs to learn
+        # is small — mostly re-weighting which tokens to attend to for
+        # category signal. Rank 8-16 is typically enough; going to 64+
+        # risks overfitting on ~500 training examples and slows training
+        # for no accuracy gain. Comparing ranks empirically (this ablation)
+        # is exactly how you'd defend a rank choice in an interview instead
+        # of citing a rule of thumb.
+        lora_alpha=args.rank * 2,
         # Alpha = 2x rank is a well-tested default (effective scaling
-        # factor alpha/r = 2). It controls how strongly the LoRA update
-        # is weighted relative to the frozen base weights at inference.
+        # factor alpha/r = 2), kept consistent across the ablation so rank
+        # is the only variable changing between runs.
         lora_dropout=0.05,
         # Small dropout on the LoRA layers only, as regularization against
         # overfitting given our tiny dataset.
@@ -129,9 +141,10 @@ def main():
 
     model = get_peft_model(model, lora_config)
     model.print_trainable_parameters()
-    # Expect roughly 0.5-1.5% of total params trainable. If this number is
-    # much higher, target_modules is too broad; much lower, LoRA may be
-    # under-parameterized for the task.
+    # At rank 16 this was ~1.18% for this model/target-module combo. Expect
+    # roughly half that at rank 8, and roughly double at rank 32 -- trainable
+    # param count scales close to linearly with rank, since each targeted
+    # layer's LoRA matrices are r x hidden_dim in size.
 
     collator = DataCollatorForSeq2Seq(
         tokenizer=tokenizer,
@@ -147,7 +160,7 @@ def main():
     )
 
     training_args = TrainingArguments(
-        output_dir=str(OUTPUT_DIR),
+        output_dir=str(output_dir),
         num_train_epochs=3,
         # 3 epochs over ~500 examples. More than that on a dataset this
         # small risks memorizing surface phrasing rather than the
@@ -190,9 +203,9 @@ def main():
 
     trainer.train()
 
-    model.save_pretrained(str(OUTPUT_DIR / "final"))
-    tokenizer.save_pretrained(str(OUTPUT_DIR / "final"))
-    print(f"Saved LoRA adapter to {OUTPUT_DIR / 'final'}")
+    model.save_pretrained(str(output_dir / "final"))
+    tokenizer.save_pretrained(str(output_dir / "final"))
+    print(f"Saved LoRA adapter to {output_dir / 'final'}")
 
     # ---- What to watch during training ----
     # 1. Train loss should fall smoothly and monotonically-ish. Spiky loss
