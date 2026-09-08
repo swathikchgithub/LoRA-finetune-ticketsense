@@ -23,7 +23,10 @@ re-architecting.
 
 import argparse
 import json
+import random
 from pathlib import Path
+
+import numpy as np
 
 import torch
 from datasets import Dataset
@@ -90,6 +93,21 @@ def main():
     args = parser.parse_args()
     output_dir = CHECKPOINTS_ROOT / f"lora-rank{args.rank}"
     print(f"\n=== Training with LoRA rank={args.rank}, saving to {output_dir} ===\n")
+
+    # Seed everything that affects randomness in this run: Python's random
+    # module, numpy, and torch's CPU/GPU RNGs. Without this, the LoRA
+    # adapter's random initialization differs run to run even with
+    # identical hyperparameters -- which is exactly why our two rank-16
+    # runs produced different eval_loss curves (0.036 best vs 0.067 best)
+    # despite using the same config. Fixing the seed makes results
+    # reproducible and makes ablations like this one (rank 8 vs 16 vs 32)
+    # actually comparable -- differences you see are attributable to rank,
+    # not to random luck in initialization.
+    SEED = 42
+    random.seed(SEED)
+    np.random.seed(SEED)
+    torch.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
 
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
     if tokenizer.pad_token is None:

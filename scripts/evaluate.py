@@ -18,9 +18,11 @@ Compares BASE model (zero-shot / prompted) vs LORA FINE-TUNED model on:
   5. Failure mode analysis: which categories get confused with which,
      and manual inspection of the worst N errors
 
-Run after train_lora.py has produced checkpoints/lora-it-ticket-classifier/final
+Run after train_lora.py has produced checkpoints/lora-rank<N>/final
+Usage: python3 scripts/evaluate.py --rank 16
 """
 
+import argparse
 import json
 import time
 from collections import Counter, defaultdict
@@ -31,9 +33,9 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 
 MODEL_NAME = "Qwen/Qwen2.5-1.5B-Instruct"
-ADAPTER_DIR = Path(__file__).resolve().parent.parent / "checkpoints" / "lora-it-ticket-classifier" / "final"
+CHECKPOINTS_ROOT = Path(__file__).resolve().parent.parent / "checkpoints"
 DATA_DIR = Path(__file__).resolve().parent.parent / "dataset"
-RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
+RESULTS_ROOT = Path(__file__).resolve().parent.parent / "results"
 
 CATEGORIES = [
     "Hardware", "Software", "Network", "Access_Account",
@@ -54,7 +56,7 @@ def load_jsonl(path):
         return [json.loads(line) for line in f]
 
 
-def load_models():
+def load_models(adapter_dir):
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
@@ -62,7 +64,7 @@ def load_models():
     base_model = AutoModelForCausalLM.from_pretrained(
         MODEL_NAME, torch_dtype=torch.bfloat16, device_map="auto"
     )
-    ft_model = PeftModel.from_pretrained(base_model, str(ADAPTER_DIR))
+    ft_model = PeftModel.from_pretrained(base_model, str(adapter_dir))
     # NOTE: base_model and ft_model share weights until adapters are
     # toggled — use ft_model.disable_adapter() context to get true base
     # behavior from the SAME loaded weights (avoids loading the model twice).
@@ -74,13 +76,14 @@ def generate(model, tokenizer, text, temperature=0.0, max_new_tokens=12):
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": text},
     ]
-
     prompt_text = tokenizer.apply_chat_template(
         messages, tokenize=False, add_generation_prompt=True
     )
     inputs = tokenizer(prompt_text, return_tensors="pt").input_ids.to(model.device)
-
-  
+    # Same fix as train_lora.py: get the chat template as plain text first,
+    # then tokenize it ourselves -- sidesteps apply_chat_template returning
+    # a BatchEncoding wrapper instead of a raw tensor in some transformers
+    # versions, which broke model.generate()'s internal .shape access.
 
     start = time.perf_counter()
     with torch.no_grad():
@@ -186,10 +189,21 @@ def consistency_check(model, tokenizer, test_set, temperature=0.7, n_runs=CONSIS
 
 
 def main():
-    RESULTS_DIR.mkdir(exist_ok=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--rank", type=int, default=16,
+        help="Which LoRA rank checkpoint to evaluate (must match a folder "
+             "checkpoints/lora-rank<N>/final produced by train_lora.py --rank <N>).",
+    )
+    args = parser.parse_args()
+    adapter_dir = CHECKPOINTS_ROOT / f"lora-rank{args.rank}" / "final"
+    results_dir = RESULTS_ROOT / f"rank{args.rank}"
+    results_dir.mkdir(parents=True, exist_ok=True)
+    print(f"\n=== Evaluating LoRA rank={args.rank} adapter from {adapter_dir} ===\n")
+
     test_set = load_jsonl(DATA_DIR / "test.jsonl")
 
-    tokenizer, base_model, ft_model = load_models()
+    tokenizer, base_model, ft_model = load_models(adapter_dir)
 
     print("Evaluating BASE model (zero-shot, prompted)...")
     with ft_model.disable_adapter():
@@ -198,7 +212,7 @@ def main():
 
     print("\nEvaluating FINE-TUNED model...")
     ft_results = evaluate_model(ft_model, tokenizer, test_set, temperature=0.0, tag="finetuned")
-    ft_summary = summarize(ft_results, "LORA FINE-TUNED MODEL")
+    ft_summary = summarize(ft_results, f"LORA FINE-TUNED MODEL (rank={args.rank})")
 
     print("\nRunning consistency check (this takes a while: N runs x test set)...")
     with ft_model.disable_adapter():
@@ -208,17 +222,18 @@ def main():
     print(f"Fine-tuned model self-consistency: {ft_consistency:.1%}")
 
     # Save everything for the README / failure analysis
-    with open(RESULTS_DIR / "base_results.json", "w") as f:
+    with open(results_dir / "base_results.json", "w") as f:
         json.dump(base_results, f, indent=2)
-    with open(RESULTS_DIR / "ft_results.json", "w") as f:
+    with open(results_dir / "ft_results.json", "w") as f:
         json.dump(ft_results, f, indent=2)
-    with open(RESULTS_DIR / "summary.json", "w") as f:
+    with open(results_dir / "summary.json", "w") as f:
         json.dump({
+            "rank": args.rank,
             "base": base_summary, "finetuned": ft_summary,
             "base_consistency": base_consistency, "ft_consistency": ft_consistency,
         }, f, indent=2)
 
-    print(f"\nResults written to {RESULTS_DIR}")
+    print(f"\nResults written to {results_dir}")
     print("Next: pull the worst-N errors from ft_results.json where correct=False "
           "for the failure mode section of the README.")
 

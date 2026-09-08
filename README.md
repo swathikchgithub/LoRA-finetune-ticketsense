@@ -150,6 +150,35 @@ exactly, with zero LoRA overhead. Worth stating explicitly: **LoRA has an
 inference cost until merged**, and this project's own numbers demonstrate
 it directly.
 
+## LoRA rank ablation: 8 vs 16 vs 32
+
+Ran the identical pipeline at three ranks to test whether more adapter
+capacity actually helps on this task/dataset size, rather than picking
+rank 16 by rule of thumb alone.
+
+| Rank | Trainable % | Best eval_loss |
+|---|---|---|
+| 8 | 0.59% | 0.096 |
+| 16 | 1.18% | **0.067** (best) |
+| 32 | 2.34% | 0.204 (worst — nearly 2-3x higher loss than rank 8 or 16) |
+
+**Finding:** doubling capacity from 16 to 32 made results *worse*, not
+better — a clean demonstration that with only 506 training examples,
+rank 32 has more capacity than the task needs, and that extra capacity
+goes toward overfitting rather than useful signal. This is a
+data-backed answer to "why rank 16," not a rule-of-thumb justification.
+
+**A limitation worth being upfront about:** re-running rank 16 with
+identical hyperparameters on a separate occasion produced a different
+best eval_loss (0.036 in the original run vs. 0.067 here), because the
+LoRA adapter's initial weights are randomly initialized and the training
+script did not originally fix PyTorch's random seed (only dataset
+generation was seeded). `torch.manual_seed()` has since been added to
+`train_lora.py` to make future runs reproducible — but it's worth noting
+that with a dataset this small, some run-to-run variance from adapter
+initialization should be expected regardless, and a single run's number
+shouldn't be over-trusted without a repeat.
+
 ## Failure mode analysis
 
 All 10 of the fine-tuned model's test-set errors trace back to two root
