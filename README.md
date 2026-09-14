@@ -235,6 +235,75 @@ Worth saying explicitly, since this is a toy project:
   ones to a human?) — that's the eval question that actually matters for
   a routing system in production, more than raw accuracy.
 
+## Post-deployment observability layer
+
+Everything above covers pre-deployment: training, evaluation, and
+ablation. This section extends the project past that point, on purpose
+-- the fine-tuning work answers "does the model work," but says nothing
+about what happens to it after deployment. This layer simulates 90 days
+of production traffic against the deployed model and builds the
+monitoring that would catch problems offline evaluation cannot see:
+data drift, training-serving skew, and data quality degradation.
+
+### Stage 1: Traffic simulation + telemetry
+
+`observability/simulate_traffic.py` generates a stream of realistic
+tickets over a simulated 90-day period, runs each through the fine-tuned
+model (rank-8 checkpoint), and logs every prediction -- input text, true
+category, predicted category, a real confidence score (read directly off
+the model's softmax, not inferred), and latency -- to a SQLite database
+built for time-series queries.
+
+Baseline run (no injected issues): mean daily accuracy 97.8%, std 3.1%
+purely from sampling noise at 20 tickets/day. This noise band matters --
+it's the threshold everything downstream is calibrated against, instead
+of an arbitrary guess.
+
+### Stage 2: Data drift detection (PSI / KL divergence)
+
+`observability/drift_detection.py` computes Population Stability Index
+and KL divergence between the training-time category distribution and a
+rolling 7-day window of the model's *predictions* -- deliberately using
+predictions, not ground truth, because that's the point: this signal
+requires zero labels and is available in real time, unlike accuracy.
+
+A second simulation run (`--scenario drift`) shifts the category mix
+starting day 45, weighted toward `Access_Account` and `Software` --
+chosen because the original held-out test set (only 4 and 27 examples
+respectively) showed weak `Access_Account` accuracy (25%), flagged in
+this README as too small a sample to trust.
+
+**What actually happened is a more valuable finding than what was
+designed for.** PSI detected the shift decisively and correctly -- rising
+from a baseline of 0.02-0.14 to a sustained 0.5-0.67, days past the 0.25
+"significant shift" threshold, immediately after day 45. But **rolling
+accuracy never dropped** -- it stayed in the 93-98% range throughout. At
+production scale (hundreds of real examples per category, vs. 4 in the
+original test set), the model handles `Access_Account` fine; the 25%
+figure was small-sample noise, not a real weakness -- confirming, with
+real data instead of a caveat, the exact concern already flagged in the
+ablation results above.
+
+**Why this is the more useful result to report, not a failed
+experiment:** it's a clean, real example of exactly the alert-fatigue
+problem Stage 5 has to solve. A strong, correct, threshold-crossing PSI
+alert (0.67, far past 0.25) corresponded to zero actual harm. Paging
+on-call for every PSI breach here would mean ~40 consecutive days of
+alerts for a shift that never degraded anything -- a concrete, measured
+example of why distribution-shift alerts need business-impact
+prioritization, not just a statistical threshold.
+
+Separately, this script also demonstrates why input-distribution
+monitoring has real production value even when it *does* correspond to
+harm: it models a realistic label delay (ground truth from a human
+reviewer arrives days later, not instantly) and shows PSI would surface
+a genuine shift before an accuracy-based monitor could, purely because
+accuracy has to wait on labels that haven't arrived yet.
+
+### Coming next: Stage 3 (training-serving skew), Stage 4 (data quality
+monitoring), Stage 5 (dashboard + alerting with explicit alert-fatigue
+prioritization).
+
 ## Repo structure
 
 ```
@@ -247,6 +316,11 @@ LoRA-finetune-ticketsense/
 │   ├── generate_dataset.py
 │   ├── train_lora.py
 │   └── evaluate.py
+├── observability/
+│   ├── model_utils.py        # shared model loading + confidence scoring
+│   ├── simulate_traffic.py   # Stage 1: 90-day traffic simulation
+│   ├── drift_detection.py    # Stage 2: PSI/KL drift detection
+│   └── telemetry.db          # gitignored, produced by simulate_traffic.py
 ├── results/            # produced by evaluate.py
 ├── requirements.txt
 └── README.md
