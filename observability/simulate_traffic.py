@@ -74,24 +74,44 @@ def init_db(db_path: Path):
     return conn
 
 
-def category_mix_for_day(day: int, rng: random.Random):
-    """Returns a weighted list of categories to sample from for this day.
-    Stage 1 is pure baseline: uniform-ish weights matching the training
-    distribution, no drift yet. Stages 2/3 will override this function's
-    behavior (or call it with different arguments) to inject shifts --
-    kept as its own function now specifically so later stages can hook in
-    here without rewriting the simulation loop.
+def category_weights_for_day(day: int, scenario: str, drift_start_day: int):
+    """Returns a dict of {category: weight} to sample from for this day.
+
+    Baseline: equal weight across all 8 categories, matching training
+    distribution.
+
+    'drift' scenario (from drift_start_day onward): shifts weight toward
+    Software and Access_Account specifically -- not an arbitrary choice.
+    These are the two categories our rank-8 model handles WORST on the
+    real held-out test set (77.8% and 25% accuracy respectively, see
+    README) -- a real production shift that increases the share of
+    tickets in your model's already-weak categories is exactly the kind
+    of drift that causes visible performance degradation, as opposed to a
+    shift toward categories the model already handles perfectly (which
+    would show up in PSI but NOT hurt accuracy -- a distinction worth
+    being able to explain: not all input drift degrades performance, but
+    this specific shift plausibly represents something realistic, like an
+    SSO rollout causing a wave of access and login-related tickets.
     """
-    return CATEGORIES  # equal weight across all 8 -- baseline distribution
+    baseline_weights = {c: 1.0 for c in CATEGORIES}
+    if scenario == "drift" and day >= drift_start_day:
+        weights = dict(baseline_weights)
+        weights["Software"] = 4.0
+        weights["Access_Account"] = 4.0
+        return weights
+    return baseline_weights
 
 
-def simulate(days: int, tickets_per_day: int, rank: int, seed: int, scenario: str):
+def simulate(days: int, tickets_per_day: int, rank: int, seed: int,
+             scenario: str, drift_start_day: int):
     rng = random.Random(seed)
     conn = init_db(DB_PATH)
     classifier = TicketClassifier(rank=rank)
 
     print(f"Loaded fine-tuned model (rank={rank}). Simulating {days} days "
-          f"x {tickets_per_day} tickets/day = {days * tickets_per_day} total predictions.\n")
+          f"x {tickets_per_day} tickets/day = {days * tickets_per_day} total predictions. "
+          f"Scenario={scenario}"
+          + (f" (drift starts day {drift_start_day})" if scenario == "drift" else "") + "\n")
 
     for day in range(days):
         sim_date = SIM_START_DATE + timedelta(days=day)
@@ -99,10 +119,12 @@ def simulate(days: int, tickets_per_day: int, rank: int, seed: int, scenario: st
         day_confidences = []
         day_latencies = []
 
-        categories_today = category_mix_for_day(day, rng)
+        weights_today = category_weights_for_day(day, scenario, drift_start_day)
+        cats_today = list(weights_today.keys())
+        wts_today = list(weights_today.values())
 
         for _ in range(tickets_per_day):
-            true_category = rng.choice(categories_today)
+            true_category = rng.choices(cats_today, weights=wts_today, k=1)[0]
             template = rng.choice(TEMPLATES[true_category])
             ticket_text = render_ticket(template, rng)
 
@@ -144,9 +166,12 @@ if __name__ == "__main__":
                          help="Different from dataset generation's seed (42) on purpose -- "
                               "this is a DIFFERENT random stream simulating new, unseen traffic, "
                               "not a replay of the training/test data.")
-    parser.add_argument("--scenario", type=str, default="baseline",
-                         help="Label for this simulation run, stored in the DB so multiple "
-                              "scenarios (baseline, drift, skew) can coexist and be compared.")
+    parser.add_argument("--scenario", type=str, default="baseline", choices=["baseline", "drift"],
+                         help="'baseline' = stable category mix throughout. 'drift' = mix "
+                              "shifts starting at --drift-start-day, weighted toward the "
+                              "model's weaker categories (Software, Access_Account).")
+    parser.add_argument("--drift-start-day", type=int, default=45,
+                         help="Day the category mix shift begins, for --scenario drift.")
     args = parser.parse_args()
 
-    simulate(args.days, args.tickets_per_day, args.rank, args.seed, args.scenario)
+    simulate(args.days, args.tickets_per_day, args.rank, args.seed, args.scenario, args.drift_start_day)
