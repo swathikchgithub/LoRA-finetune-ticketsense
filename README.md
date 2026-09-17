@@ -300,9 +300,61 @@ reviewer arrives days later, not instantly) and shows PSI would surface
 a genuine shift before an accuracy-based monitor could, purely because
 accuracy has to wait on labels that haven't arrived yet.
 
-### Coming next: Stage 3 (training-serving skew), Stage 4 (data quality
-monitoring), Stage 5 (dashboard + alerting with explicit alert-fatigue
-prioritization).
+### Stage 3: Training-serving skew detection
+
+Stage 2 watches the category *distribution* of predictions. It has no
+visibility into a different, equally real failure mode: the serving
+pipeline feeding the model text that was preprocessed differently than
+training data was. A sanitizer that lowercases input, a gateway that
+truncates long ticket bodies, a queue-tagging integration that prepends
+metadata -- none of these look wrong in isolation, and none of them show
+up as category drift, but they all change what the model actually sees
+at inference time.
+
+`observability/skew_detection.py` tests this directly using the
+`normalize_fn` hook already built into `TicketClassifier`
+(`observability/model_utils.py`), added specifically for this stage. For
+each ticket, the **same loaded model** predicts twice: once on the text
+unchanged (what training saw) and once run through a simulated
+serving-side transform. Pairing both predictions on the identical ticket
+-- rather than comparing two independently-sampled traffic streams -- is
+deliberate: Stage 1 measured ~3% std in daily accuracy from sampling
+noise alone, and an unpaired comparison would confound that noise with
+the actual skew effect.
+
+Four skew scenarios, chosen to be the kind of change that ships by
+accident, not on purpose:
+- **`truncation`** -- a length cap applied upstream (webform/gateway/log
+  column) that training's full-length text never had.
+- **`lowercase`** -- an unrelated search-indexing sanitizer that
+  lowercases input before it reaches the model.
+- **`sanitize`** -- ASCII-normalizing curly quotes/dashes and collapsing
+  repeated punctuation; individually harmless-looking cleanup steps that
+  were never applied to training data.
+- **`prefix_injection`** -- a ticketing-system convention (a queue tag /
+  ticket ID) leaking into the model input ahead of the ticket body.
+
+For each scenario it reports paired trained-vs-serving accuracy, the
+**label flip rate** (skew severe enough to change the predicted
+category), and a **silent degradation rate**: the share of tickets where
+confidence drops sharply (>0.15) but the label hasn't flipped yet. That
+second number is the point of this stage -- it's the same
+confidence-as-leading-indicator idea `model_utils.py` was built around,
+demonstrated concretely: skew often erodes confidence for several
+tickets before it costs a single wrong answer, which is exactly the
+window a confidence-only or accuracy-only monitor would miss.
+
+Run it with `python3 observability/skew_detection.py` (needs the rank-8
+checkpoint and a GPU, same as Stages 1-2). It logs every paired
+comparison to `observability/telemetry.db` (table `skew_comparisons`) and
+a per-scenario summary to `observability/skew_results.csv`, ranked by
+accuracy impact -- feeding directly into Stage 5's alert prioritization.
+
+*Results pending a GPU run — this environment has no GPU/model
+checkpoint available to execute it; numbers will be added here once run.*
+
+### Coming next: Stage 4 (data quality monitoring), Stage 5 (dashboard +
+alerting with explicit alert-fatigue prioritization).
 
 ## Repo structure
 
@@ -320,6 +372,7 @@ LoRA-finetune-ticketsense/
 │   ├── model_utils.py        # shared model loading + confidence scoring
 │   ├── simulate_traffic.py   # Stage 1: 90-day traffic simulation
 │   ├── drift_detection.py    # Stage 2: PSI/KL drift detection
+│   ├── skew_detection.py     # Stage 3: training-serving skew detection
 │   └── telemetry.db          # gitignored, produced by simulate_traffic.py
 ├── results/            # produced by evaluate.py
 ├── requirements.txt
