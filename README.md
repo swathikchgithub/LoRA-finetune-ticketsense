@@ -309,9 +309,57 @@ this model's actual production behavior. The honest finding from the
 real run is the one above: PSI fired decisively, accuracy never needed
 to.
 
-### Coming next: Stage 3 (training-serving skew), Stage 4 (data quality
-monitoring), Stage 5 (dashboard + alerting with explicit alert-fatigue
-prioritization).
+### Stage 3: Training-serving skew (the most important stage)
+
+`observability/offline_vs_serving_eval.py` runs the exact same rank-8
+model on the exact same held-out test set through two preprocessing
+paths: the training-time path (identity, what `evaluate.py` and a CI/CD
+gate would check) and a simulated serving-time bug
+(`observability/skew_scenarios.py`: truncates ticket text to N
+characters, modeling a realistic legacy field-length limit that the
+training data export never had).
+
+Offline accuracy is identical across every truncation severity tested
+(92.2%, as it must be -- offline eval never touches the truncation code
+path). Serving accuracy degrades monotonically as truncation tightens:
+
+| Truncation | Offline accuracy | Serving accuracy | Gap invisible to offline eval |
+|---|---|---|---|
+| 60 chars | 92.2% | 86.1% | 6.1 pts |
+| 40 chars | 92.2% | 82.6% | 9.6 pts |
+| 30 chars | 92.2% | 70.4% | 21.7 pts |
+
+**A CI/CD quality gate checking only offline accuracy would have
+approved this model at every single severity level tested** -- this is
+the exact scenario the role's JD describes: a model that passes
+pre-production evaluation while silently degrading in production,
+because the gate only ever exercised the training-time code path.
+
+**The finding underneath the aggregate number is the more important
+one.** `Security_Phishing` went from 100% offline to **0%** at both 40
+and 60 chars -- not a gradual decline, a complete collapse, at the
+*mildest* severity tested, while the aggregate metric only moved 6
+points. All 6 failures trace to one template ("Downloaded an attachment
+before realizing the sender domain looked fake"), truncated to
+"...before rea..." -- cutting off exactly the phrase that signals
+phishing, leaving text that reasonably reads as a generic Email/Software
+ticket.
+
+**The genuinely alarming part: the model is confidently wrong, not
+uncertain.** Confidence on these 6 misclassified phishing tickets
+averaged **0.965** -- higher than the 0.904 average confidence across
+all serving traffic. A confidence-threshold alert -- the first thing
+most teams would build -- would never fire on this failure. It would
+look *more* trustworthy than typical traffic while silently misrouting
+security-relevant tickets. This is the single clearest evidence in this
+project for why distribution/behavior monitoring (PSI, category-level
+accuracy tracking, canary comparisons against a known-good preprocessing
+path) has to exist alongside confidence monitoring, not instead of it --
+confidence alone would have completely missed this.
+
+### Coming next: Stage 4 (data quality monitoring), Stage 5 (dashboard +
+alerting with explicit alert-fatigue prioritization).
+
 
 ## Repo structure
 
@@ -326,10 +374,12 @@ LoRA-finetune-ticketsense/
 │   ├── train_lora.py
 │   └── evaluate.py
 ├── observability/
-│   ├── model_utils.py        # shared model loading + confidence scoring
-│   ├── simulate_traffic.py   # Stage 1: 90-day traffic simulation
-│   ├── drift_detection.py    # Stage 2: PSI/KL drift detection
-│   └── telemetry.db          # gitignored, produced by simulate_traffic.py
+│   ├── model_utils.py             # shared model loading + confidence scoring
+│   ├── simulate_traffic.py        # Stage 1: 90-day traffic simulation
+│   ├── drift_detection.py         # Stage 2: PSI/KL drift detection
+│   ├── skew_scenarios.py          # Stage 3: serving-preprocessing bug definitions
+│   ├── offline_vs_serving_eval.py # Stage 3: offline vs. serving accuracy comparison
+│   └── telemetry.db, skew_results/  # gitignored, produced by running the scripts
 ├── results/            # produced by evaluate.py
 ├── requirements.txt
 └── README.md
