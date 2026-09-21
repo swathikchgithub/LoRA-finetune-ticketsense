@@ -43,11 +43,16 @@ class TicketClassifier:
     predict many times, which is how a real serving process would work
     (not reloading the model per-request)."""
 
-    def __init__(self, rank: int = 8, normalize_fn=None):
+    def __init__(self, rank: int = 8, normalize_fn=None, adapter_dir=None):
         """
-        rank: which LoRA checkpoint to load (default 8 -- our ablation
-              found it's the most parameter-efficient with no accuracy
-              cost, see README).
+        rank: which LoRA checkpoint to load by the standard rank<N> naming
+              convention (default 8 -- our ablation found it's the most
+              parameter-efficient with no accuracy cost, see README).
+              Ignored if adapter_dir is given explicitly.
+        adapter_dir: explicit path override. Needed for scripts like
+              auto_train_search.py, where configs vary by rank AND
+              learning rate AND epochs -- the rank-only naming convention
+              isn't enough to address every checkpoint the search produces.
         normalize_fn: optional text preprocessing function applied to the
               input BEFORE tokenization. This is the hook Stage 3 (training-
               serving skew) will use to simulate a serving path that
@@ -56,7 +61,8 @@ class TicketClassifier:
               differently. Defaults to identity (no change) so Stage 1/2
               behave exactly like evaluate.py's proven pipeline.
         """
-        adapter_dir = CHECKPOINTS_ROOT / f"lora-rank{rank}" / "final"
+        if adapter_dir is None:
+            adapter_dir = CHECKPOINTS_ROOT / f"lora-rank{rank}" / "final"
         self.tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token

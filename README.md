@@ -195,6 +195,53 @@ done, not the largest one that's affordable — bigger isn't free, and on
 a small dataset it actively risks overfitting without a compensating
 accuracy gain.
 
+## Automated hyperparameter search — and why its "winner" was rejected
+
+Built `scripts/auto_train_search.py`: a data-cleaning gate (validates
+every training/val example before spending any GPU time), followed by a
+grid search over rank × learning_rate × epochs (27 possible configs),
+training and evaluating each in one continuous pod session with
+early stopping once improvement stalls.
+
+**A real design flaw showed up immediately, and it's worth documenting
+rather than hiding.** The search's iteration order is rank-outer, and
+patience-based early stopping has no awareness it's inside a grid — it
+stopped after 3 non-improving configs, all of which were still rank=8.
+Ranks 16 and 32 were never tried at all. Patience-based early stopping
+is built for *sequential* refinement (where stalling meaningfully
+signals convergence); it's a poor fit for *grid* search, where each cell
+is independent and stalling in one neighborhood says nothing about
+untried regions.
+
+**The bigger finding: the search's own "winner" didn't hold up.** It
+picked rank=8, lr=1e-4, epochs=2 with 92.9% accuracy — but that number
+was measured on the 99-example validation set. Verified against the real,
+untouched 115-example test set with the full `evaluate.py` methodology
+(base comparison, per-category breakdown, consistency check):
+
+| Config | Validation accuracy (search metric) | Real test accuracy |
+|---|---|---|
+| Search winner (rank 8, lr=1e-4, epochs=2) | 92.9% | **91.3%** (105/115) |
+| Original config (rank 8, lr=2e-4, epochs=3) | — | **92.2%** (106/115) |
+
+The search's pick was actually *worse* on the held-out test set than
+what was already established. The ~4-point edge it showed during search
+was noise from a small validation set (99 examples — a few flipped
+predictions move the percentage by multiple points), not a real signal.
+
+**Why this is a good outcome, not a wasted run:** it's direct evidence
+of a real failure mode in automated ML pipelines — optimizing against a
+small validation set can select a config that doesn't generalize, which
+is exactly why a separate, held-out test set matters as a genuine check
+rather than a formality. It also answers the natural follow-up
+("did you try automating hyperparameter search?") with a true story
+that shows judgment: the search ran, it surfaced a design flaw in its
+own stopping logic, its result was verified and rejected, and the
+original hand-tuned config remains the best-verified one. Knowing when
+*not* to trust an automated result — and stopping further search once
+the data says further tuning isn't worth the GPU time — is itself the
+point.
+
 ## Failure mode analysis
 
 All 10 of the fine-tuned model's test-set errors trace back to two root

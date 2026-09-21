@@ -193,13 +193,29 @@ def main():
     parser.add_argument(
         "--rank", type=int, default=16,
         help="Which LoRA rank checkpoint to evaluate (must match a folder "
-             "checkpoints/lora-rank<N>/final produced by train_lora.py --rank <N>).",
+             "checkpoints/lora-rank<N>/final produced by train_lora.py --rank <N>). "
+             "Ignored if --adapter-dir is given.",
+    )
+    parser.add_argument(
+        "--adapter-dir", type=str, default=None,
+        help="Explicit adapter path override -- needed for checkpoints from "
+             "auto_train_search.py, which aren't addressable by rank alone "
+             "(e.g. checkpoints/search/rank8_lr0.0001_ep2/final).",
+    )
+    parser.add_argument(
+        "--tag", type=str, default=None,
+        help="Label for the results/ subfolder when using --adapter-dir "
+             "(defaults to the adapter-dir's own folder name).",
     )
     args = parser.parse_args()
-    adapter_dir = CHECKPOINTS_ROOT / f"lora-rank{args.rank}" / "final"
-    results_dir = RESULTS_ROOT / f"rank{args.rank}"
+    if args.adapter_dir:
+        adapter_dir = Path(args.adapter_dir)
+        results_dir = RESULTS_ROOT / (args.tag or adapter_dir.parent.name)
+    else:
+        adapter_dir = CHECKPOINTS_ROOT / f"lora-rank{args.rank}" / "final"
+        results_dir = RESULTS_ROOT / f"rank{args.rank}"
     results_dir.mkdir(parents=True, exist_ok=True)
-    print(f"\n=== Evaluating LoRA rank={args.rank} adapter from {adapter_dir} ===\n")
+    print(f"\n=== Evaluating adapter from {adapter_dir} ===\n")
 
     test_set = load_jsonl(DATA_DIR / "test.jsonl")
 
@@ -212,7 +228,8 @@ def main():
 
     print("\nEvaluating FINE-TUNED model...")
     ft_results = evaluate_model(ft_model, tokenizer, test_set, temperature=0.0, tag="finetuned")
-    ft_summary = summarize(ft_results, f"LORA FINE-TUNED MODEL (rank={args.rank})")
+    label = f"adapter_dir={args.adapter_dir}" if args.adapter_dir else f"rank={args.rank}"
+    ft_summary = summarize(ft_results, f"LORA FINE-TUNED MODEL ({label})")
 
     print("\nRunning consistency check (this takes a while: N runs x test set)...")
     with ft_model.disable_adapter():
@@ -228,7 +245,7 @@ def main():
         json.dump(ft_results, f, indent=2)
     with open(results_dir / "summary.json", "w") as f:
         json.dump({
-            "rank": args.rank,
+            "adapter_dir": str(adapter_dir), "rank": args.rank if not args.adapter_dir else None,
             "base": base_summary, "finetuned": ft_summary,
             "base_consistency": base_consistency, "ft_consistency": ft_consistency,
         }, f, indent=2)
