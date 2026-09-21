@@ -20,6 +20,8 @@ results/
 # instead, which IS committed.
 observability/telemetry.db
 observability/*.db
+observability/skew_results/
+observability/*.csv
 
 # Jupyter
 .ipynb_checkpoints/
