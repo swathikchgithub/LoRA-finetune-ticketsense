@@ -274,15 +274,17 @@ respectively) showed weak `Access_Account` accuracy (25%), flagged in
 this README as too small a sample to trust.
 
 **What actually happened is a more valuable finding than what was
-designed for.** PSI detected the shift decisively and correctly -- rising
-from a baseline of 0.02-0.14 to a sustained 0.5-0.67, days past the 0.25
-"significant shift" threshold, immediately after day 45. But **rolling
-accuracy never dropped** -- it stayed in the 93-98% range throughout. At
-production scale (hundreds of real examples per category, vs. 4 in the
-original test set), the model handles `Access_Account` fine; the 25%
-figure was small-sample noise, not a real weakness -- confirming, with
-real data instead of a caveat, the exact concern already flagged in the
-ablation results above.
+designed for, and it reproduced on a second, independent run** (different
+pod, same code, fresh random seed for traffic generation): PSI detected
+the shift decisively and correctly both times -- rising from a baseline
+of 0.01-0.14 to a sustained 0.4-0.65, crossing the 0.25 "significant
+shift" threshold on day 50 in both runs. But **rolling accuracy never
+dropped below the alert threshold in either run** -- it stayed in the
+93-98% range throughout. At production scale (hundreds of real examples
+per category, vs. 4 in the original test set), the model handles
+`Access_Account` fine; the 25% figure was small-sample noise, not a real
+weakness -- confirming, with real data instead of a caveat, the exact
+concern already flagged in the ablation results above.
 
 **Why this is the more useful result to report, not a failed
 experiment:** it's a clean, real example of exactly the alert-fatigue
@@ -293,12 +295,19 @@ alerts for a shift that never degraded anything -- a concrete, measured
 example of why distribution-shift alerts need business-impact
 prioritization, not just a statistical threshold.
 
-Separately, this script also demonstrates why input-distribution
-monitoring has real production value even when it *does* correspond to
-harm: it models a realistic label delay (ground truth from a human
-reviewer arrives days later, not instantly) and shows PSI would surface
-a genuine shift before an accuracy-based monitor could, purely because
-accuracy has to wait on labels that haven't arrived yet.
+Separately, `drift_detection.py` also models realistic label delay via
+`--label-delay-days` (default 5) -- ground truth from a human reviewer
+arrives days later in reality, not instantly, and the script computes how
+many days PSI would surface a shift before a label-delayed accuracy
+monitor could. **Worth being precise about what this run did and didn't
+show:** because accuracy never crossed its alert threshold in this
+experiment, there's no real lead-time number to report here -- the
+mechanism was validated separately against synthetic data with a
+deliberately-injected accuracy drop (confirming a 4-day lead time in that
+controlled test), but that number describes the synthetic validation, not
+this model's actual production behavior. The honest finding from the
+real run is the one above: PSI fired decisively, accuracy never needed
+to.
 
 ### Coming next: Stage 3 (training-serving skew), Stage 4 (data quality
 monitoring), Stage 5 (dashboard + alerting with explicit alert-fatigue
