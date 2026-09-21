@@ -357,8 +357,44 @@ accuracy tracking, canary comparisons against a known-good preprocessing
 path) has to exist alongside confidence monitoring, not instead of it --
 confidence alone would have completely missed this.
 
-### Coming next: Stage 4 (data quality monitoring), Stage 5 (dashboard +
-alerting with explicit alert-fatigue prioritization).
+### Stage 4: Data quality monitoring
+
+`observability/data_quality.py` defines ingestion-time validators for
+three realistic failure modes: **null/empty ticket text** (blocking --
+nothing to classify, so the record is rejected before it ever reaches
+the model), **silent default priority** (non-blocking -- an upstream
+integration quietly starts sending a placeholder instead of real data,
+without erroring), and **schema violation** (a new, unexpected value
+appears in a field, signaling an upstream contract changed).
+`observability/simulate_ingestion.py` injects each at a different point
+across the simulated 90 days (day 20, 45, 65) so their effects stay
+separable; `observability/data_quality_monitor.py` tracks rolling issue
+rates and alerts when each crosses a 5% threshold.
+
+**Detection was fast and precise:** each alert fired within 1-2 days of
+its actual injection point (null text: day 23 vs. injected day 20;
+silent default: day 46 vs. day 45; schema violation: day 66 vs. day 65).
+
+**The finding that matters is the "bad data vs. model problem"
+distinction this stage was built to demonstrate.** By the end of the
+run, the blocked rate -- tickets that never reached the model at all --
+climbed to **20.7%**. Meanwhile, model accuracy on the tickets that *did*
+reach it stayed essentially flat: **96.4% early, 96.4% late**, identical
+to two decimal places. That's the point: a fifth of production traffic
+silently disappearing before the model ever sees it is a serious
+incident, but it produces **zero signal** in any model-quality metric --
+accuracy, confidence, drift, all of it, because those metrics only ever
+observe the 80% that made it through validation. Watching Stages 2/3's
+signals alone would have completely missed this. It's precisely why
+ingestion-time data quality monitoring has to be a separate, first-class
+layer, not something inferred indirectly from model behavior -- and why
+an alert firing here should route to the data/platform team, not the ML
+team, while an alert firing in Stage 2/3 should route the other way.
+
+### Coming next: Stage 5 (dashboard + alerting with explicit alert-fatigue
+prioritization).
+
+
 
 
 ## Repo structure
@@ -379,6 +415,9 @@ LoRA-finetune-ticketsense/
 │   ├── drift_detection.py         # Stage 2: PSI/KL drift detection
 │   ├── skew_scenarios.py          # Stage 3: serving-preprocessing bug definitions
 │   ├── offline_vs_serving_eval.py # Stage 3: offline vs. serving accuracy comparison
+│   ├── data_quality.py            # Stage 4: ingestion-time validators
+│   ├── simulate_ingestion.py      # Stage 4: traffic + injected data quality issues
+│   ├── data_quality_monitor.py    # Stage 4: rolling issue-rate monitoring
 │   └── telemetry.db, skew_results/  # gitignored, produced by running the scripts
 ├── results/            # produced by evaluate.py
 ├── requirements.txt
