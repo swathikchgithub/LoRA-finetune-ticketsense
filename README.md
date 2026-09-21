@@ -1,6 +1,8 @@
 # LoRA-finetune-ticketsense
 
-**A rigorous base-vs-fine-tuned evaluation of LoRA on IT ticket classification.**
+**A rigorous base-vs-fine-tuned evaluation of LoRA on IT ticket classification, extended with a post-deployment observability layer.**
+
+**[Live observability dashboard →](https://claude.ai/artifact/MPXUGs5Dhy6GB9e7dhT2Qy)** — drift detection, training-serving skew, data quality monitoring, and impact-based alert prioritization, built from real telemetry.
 
 A small, end-to-end LoRA fine-tuning project: synthetic dataset generation,
 training, and a rigorous base-vs-fine-tuned evaluation. Built to close a
@@ -391,8 +393,52 @@ layer, not something inferred indirectly from model behavior -- and why
 an alert firing here should route to the data/platform team, not the ML
 team, while an alert firing in Stage 2/3 should route the other way.
 
-### Coming next: Stage 5 (dashboard + alerting with explicit alert-fatigue
-prioritization).
+### Stage 5: Dashboard + alerting
+
+`observability/alerting.py` is the actual point of this stage: it reads
+Stage 2's, 3's, and 4's outputs, **correlates** consecutive-day threshold
+breaches into single incidents (event correlation, same principle used
+in ITSM tooling), checks whether each one has **confirmed business
+impact** (not just a statistically significant number), and assigns a
+priority from P1 (page now) to P4 (log, don't page) -- reusing the same
+P1-P5 scale already established for ticket priority in `data_quality.py`.
+
+Running it against the real telemetry from Stages 2-4 produced this
+digest:
+
+| Priority | Source | Finding | Window | Peak |
+|---|---|---|---|---|
+| P1 | Stage 2: Drift | PSI distribution shift -- accuracy dipped to 93.6% (below the 95.2% threshold) | day 50-89 | PSI 0.651 |
+| P1 | Stage 4: Data Quality | Null/empty ticket text (blocking) | day 23-89 | 21.4% of traffic |
+| P2 | Stage 3: Skew | Offline/serving accuracy gap (standing finding) | -- | 9.6 pts |
+| P2 | Stage 4: Data Quality | Silent default priority field (non-blocking) | day 46-89 | 35.7% of traffic |
+| P2 | Stage 4: Data Quality | Schema violation, source_system (non-blocking) | day 66-89 | 27.1% of traffic |
+
+**The single most useful thing this digest demonstrates: the largest raw
+number in the entire system (PSI = 0.651, by far) does not get the top
+priority.** It's ranked alongside a data-quality issue that peaked at
+just 21.4% -- because that 21.4% represents traffic permanently lost
+before reaching the model, a confirmed, direct impact, while the PSI
+spike's accuracy effect was marginal and close to the noise boundary
+established back in Stage 1. Raw statistical magnitude and real business
+impact are different axes, and an alerting system that only sorts by the
+first one pages people for the wrong things.
+
+Worth being honest about one nuance: this particular PSI incident's
+"confirmed impact" classification is itself a borderline case -- an
+earlier run of the identical drift scenario showed accuracy never
+crossing the alert threshold at all (see Stage 2 above). The two results
+aren't contradictory; they reflect that a 2-standard-deviation threshold
+will occasionally fire on noise alone near the boundary. A production
+version of this system would require an accuracy dip to persist across
+multiple consecutive windows before escalating past P4, not fire on a
+single marginal crossing -- a concrete "what I'd improve" rather than a
+flaw papered over.
+
+`observability/dashboard.py` is a Streamlit app presenting all four
+stages together, with the alert digest front and center. A static,
+publicly viewable version built from this same real data is published
+at **[the live dashboard](https://claude.ai/artifact/MPXUGs5Dhy6GB9e7dhT2Qy)**.
 
 
 
@@ -418,6 +464,8 @@ LoRA-finetune-ticketsense/
 │   ├── data_quality.py            # Stage 4: ingestion-time validators
 │   ├── simulate_ingestion.py      # Stage 4: traffic + injected data quality issues
 │   ├── data_quality_monitor.py    # Stage 4: rolling issue-rate monitoring
+│   ├── alerting.py                # Stage 5: correlation + impact-based priority scoring
+│   ├── dashboard.py               # Stage 5: Streamlit dashboard (live version published separately)
 │   └── telemetry.db, skew_results/  # gitignored, produced by running the scripts
 ├── results/            # produced by evaluate.py
 ├── requirements.txt
